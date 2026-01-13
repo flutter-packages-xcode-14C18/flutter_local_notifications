@@ -2,7 +2,7 @@
 #import "./include/flutter_local_notifications/ActionEventSink.h"
 #import "./include/flutter_local_notifications/FlutterEngineManager.h"
 #import "./include/flutter_local_notifications/FlutterLocalNotificationsConverters.h"
-
+#import <Intents/Intents.h>
 @implementation FlutterLocalNotificationsPlugin {
   FlutterMethodChannel *_channel;
   bool _initialized;
@@ -114,6 +114,9 @@ NSString *const IS_PROVIDES_APP_NOTIFICATION_SETTINGS_ENABLED =
     @"isProvidesAppNotificationSettingsEnabled";
 
 NSString *const CRITICAL_SOUND_VOLUME = @"criticalSoundVolume";
+
+
+NSString* const COMMUNICATION = @"communication";
 
 typedef NS_ENUM(NSInteger, RepeatInterval) {
   EveryMinute,
@@ -571,7 +574,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)zonedSchedule:(NSDictionary *_Nonnull)arguments
                result:(FlutterResult _Nonnull)result API_AVAILABLE(ios(10.0)) {
-  UNMutableNotificationContent *content =
+  UNNotificationContent *content =
       [self buildStandardNotificationContent:arguments result:result];
   UNCalendarNotificationTrigger *trigger =
       [self buildUserNotificationCalendarTrigger:arguments];
@@ -584,7 +587,7 @@ static FlutterError *getFlutterError(NSError *error) {
 - (void)periodicallyShow:(NSDictionary *_Nonnull)arguments
                   result:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
-  UNMutableNotificationContent *content =
+    UNNotificationContent *content =
       [self buildStandardNotificationContent:arguments result:result];
   UNTimeIntervalNotificationTrigger *trigger =
       [self buildUserNotificationTimeIntervalTrigger:arguments];
@@ -621,17 +624,17 @@ static FlutterError *getFlutterError(NSError *error) {
   result(nil);
 }
 
-- (UNMutableNotificationContent *)
+- (UNNotificationContent *)
     buildStandardNotificationContent:(NSDictionary *)arguments
                               result:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
   UNMutableNotificationContent *content =
       [[UNMutableNotificationContent alloc] init];
   if ([self containsKey:TITLE forDictionary:arguments]) {
-    content.title = arguments[TITLE];
+      content.title = arguments[TITLE];
   }
   if ([self containsKey:BODY forDictionary:arguments]) {
-    content.body = arguments[BODY];
+      content.body = arguments[BODY];
   }
   NSDictionary *persistedPresentationOptions =
       [[NSUserDefaults standardUserDefaults]
@@ -667,10 +670,10 @@ static FlutterError *getFlutterError(NSError *error) {
       presentList = [[platformSpecifics objectForKey:PRESENT_LIST] boolValue];
     }
     if ([self containsKey:BADGE_NUMBER forDictionary:platformSpecifics]) {
-      content.badge = [platformSpecifics objectForKey:BADGE_NUMBER];
+        content.badge = [platformSpecifics objectForKey:BADGE_NUMBER];
     }
     if ([self containsKey:THREAD_IDENTIFIER forDictionary:platformSpecifics]) {
-      content.threadIdentifier = platformSpecifics[THREAD_IDENTIFIER];
+        content.threadIdentifier = platformSpecifics[THREAD_IDENTIFIER];
     }
     if ([self containsKey:ATTACHMENTS forDictionary:platformSpecifics]) {
       NSArray<NSDictionary *> *attachments = platformSpecifics[ATTACHMENTS];
@@ -720,11 +723,11 @@ static FlutterError *getFlutterError(NSError *error) {
           }
           [notificationAttachments addObject:notificationAttachment];
         }
-        content.attachments = notificationAttachments;
+          content.attachments = notificationAttachments;
       }
     }
     if ([self containsKey:SOUND forDictionary:platformSpecifics]) {
-      content.sound = [UNNotificationSound soundNamed:platformSpecifics[SOUND]];
+        content.sound = [UNNotificationSound soundNamed:platformSpecifics[SOUND]];
     }
     if (@available(iOS 12.0, *)) {
       if ([self containsKey:CRITICAL_SOUND_VOLUME
@@ -734,17 +737,17 @@ static FlutterError *getFlutterError(NSError *error) {
         // typically used, but this function accepts a float. As the expected
         // value falls between 0.0 and 0.1, we will cast it directly.
         if ([self containsKey:SOUND forDictionary:platformSpecifics]) {
-          content.sound = [UNNotificationSound
+            content.sound = [UNNotificationSound
               criticalSoundNamed:platformSpecifics[SOUND]
                  withAudioVolume:(float)[volume doubleValue]];
         } else {
-          content.sound = [UNNotificationSound
+            content.sound = [UNNotificationSound
               defaultCriticalSoundWithAudioVolume:(float)[volume doubleValue]];
         }
       }
     }
     if ([self containsKey:SUBTITLE forDictionary:platformSpecifics]) {
-      content.subtitle = platformSpecifics[SUBTITLE];
+        content.subtitle = platformSpecifics[SUBTITLE];
     }
     if (@available(iOS 15.0, *)) {
       if ([self containsKey:INTERRUPTION_LEVEL
@@ -752,20 +755,20 @@ static FlutterError *getFlutterError(NSError *error) {
         NSNumber *interruptionLevel = platformSpecifics[INTERRUPTION_LEVEL];
 
         if (interruptionLevel != nil) {
-          content.interruptionLevel = [interruptionLevel integerValue];
+            content.interruptionLevel = [interruptionLevel integerValue];
         }
       }
     }
     if ([self containsKey:@"categoryIdentifier"
             forDictionary:platformSpecifics]) {
-      content.categoryIdentifier = platformSpecifics[@"categoryIdentifier"];
+        content.categoryIdentifier = platformSpecifics[@"categoryIdentifier"];
     }
-  }
-
-  if (presentSound && content.sound == nil) {
-    content.sound = UNNotificationSound.defaultSound;
-  }
-  content.userInfo = [self buildUserDict:arguments[ID]
+      
+      
+    if (presentSound && content.sound == nil) {
+        content.sound = UNNotificationSound.defaultSound;
+    }
+      content.userInfo = [self buildUserDict:arguments[ID]
                                    title:content.title
                             presentAlert:presentAlert
                             presentSound:presentSound
@@ -773,6 +776,56 @@ static FlutterError *getFlutterError(NSError *error) {
                            presentBanner:presentBanner
                              presentList:presentList
                                  payload:arguments[PAYLOAD]];
+    if (@available(iOS 15.0, *)) {
+        if ([self containsKey:COMMUNICATION forDictionary:platformSpecifics]) {
+            NSDictionary* communication = platformSpecifics[COMMUNICATION];
+            
+            NSString* imagePath = communication[@"senderAvatarFilePath"];
+            // 1. 创建头像 (INImage)
+            NSURL *avatarURL = [NSURL fileURLWithPath:imagePath];
+            INImage *avatarImage = [INImage imageWithURL:avatarURL];
+
+            NSString* senderIdentifier = communication[@"senderIdentifier"];
+            // 2. 创建发件人 (INPerson)
+            INPersonHandle *handle = [[INPersonHandle alloc] initWithValue:senderIdentifier type:INPersonHandleTypeUnknown];
+            INPerson *sender = [[INPerson alloc] initWithPersonHandle:handle nameComponents:nil
+                displayName:content.title // 通知顶部的名字
+                image:avatarImage // 左侧圆形头像
+                contactIdentifier:nil
+                customIdentifier:nil];
+
+            // 3. 创建通信意图 (INSendMessageIntent)
+            INSendMessageIntent *intent = [[INSendMessageIntent alloc] initWithRecipients:nil
+                outgoingMessageType:INOutgoingMessageTypeOutgoingMessageText
+                content:content.body
+                speakableGroupName:nil
+                conversationIdentifier:@"conv_id_456"
+                serviceName:nil
+                sender:sender
+                attachments:nil];
+
+            // 捐赠交互 (Donation)，这一步对系统学习用户行为和显示头像非常重要
+            INInteraction *interaction = [[INInteraction alloc] initWithIntent:intent response:nil];
+            interaction.direction = INInteractionDirectionOutgoing;
+            [interaction donateInteractionWithCompletion:^(NSError * _Nullable error) {
+                if (error) {
+                    NSLog(@"Interaction donation failed: %@", error);
+                }
+            }];
+
+            // 5. 使用 Intent 更新通知内容
+            NSError *updateError = nil;
+            UNNotificationContent* upContent = [content contentByUpdatingWithProvider:intent error:&updateError];
+
+            if (updateError) {
+                NSLog(@"Failed to update content from intent: %@", updateError);
+                return nil;
+            }
+            return upContent;
+        }
+    }
+  }
+ 
   return content;
 }
 
@@ -894,7 +947,7 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 - (void)addNotificationRequest:(NSString *)identifier
-                       content:(UNMutableNotificationContent *)content
+                       content:(UNNotificationContent *)content
                         result:(FlutterResult _Nonnull)result
                        trigger:(UNNotificationTrigger *)trigger
     API_AVAILABLE(ios(10.0)) {
