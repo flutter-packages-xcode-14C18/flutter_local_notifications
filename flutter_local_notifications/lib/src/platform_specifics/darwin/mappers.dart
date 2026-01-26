@@ -2,6 +2,7 @@ import 'initialization_settings.dart';
 import 'notification_action.dart';
 import 'notification_attachment.dart';
 import 'notification_category.dart';
+import 'notification_communication.dart';
 import 'notification_details.dart';
 
 extension DarwinNotificationActionMapper on DarwinNotificationAction {
@@ -61,6 +62,14 @@ extension DarwinNotificationAttachmentMapper on DarwinNotificationAttachment {
   };
 }
 
+extension DarwinNotificationCommunicationMapper
+    on DarwinNotificationCommunication {
+  Map<String, Object?> toMap() => <String, Object?>{
+    'senderIdentifier':senderIdentifier,
+    'senderAvatarFilePath': senderAvatarFilePath,
+  };
+}
+
 extension DarwinNotificationDetailsMapper on DarwinNotificationDetails {
   Map<String, Object?> toMap() => <String, Object?>{
     'presentAlert': presentAlert,
@@ -76,5 +85,6 @@ extension DarwinNotificationDetailsMapper on DarwinNotificationDetails {
     'attachments': attachments?.map((a) => a.toMap()).toList(),
     'categoryIdentifier': categoryIdentifier,
     'criticalSoundVolume': criticalSoundVolume,
+    'communication': communication?.toMap(),
   };
 }
