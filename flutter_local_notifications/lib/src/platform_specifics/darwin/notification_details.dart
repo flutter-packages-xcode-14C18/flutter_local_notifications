@@ -1,5 +1,6 @@
 import 'interruption_level.dart';
 import 'notification_attachment.dart';
+import 'notification_communication.dart';
 
 /// Configures notification details specific to Darwin-based operation systems
 /// such as iOS and macOS
@@ -19,6 +20,7 @@ class DarwinNotificationDetails {
     this.categoryIdentifier,
     this.interruptionLevel,
     this.criticalSoundVolume,
+    this.communication,
   });
 
   /// Indicates if an alert should be display when the notification is triggered
@@ -153,4 +155,6 @@ class DarwinNotificationDetails {
   /// On iOS, this property is only applicable to iOS 12.0 or newer.
   /// On macOS, this property is only applicable to macOS 10.14 or newer.
   final double? criticalSoundVolume;
+
+  final DarwinNotificationCommunication? communication;
 }
